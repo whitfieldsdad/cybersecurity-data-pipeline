@@ -1,0 +1,238 @@
+SET preserve_insertion_order = false;
+
+-- CVEs
+-- * As of 2026-09-01 there are 385,313 CVE records distributed across 385,313 JSON files
+CREATE OR REPLACE TABLE _cves AS (
+    SELECT 
+        * 
+    FROM read_json_auto(
+        '~/src/whitfieldsdad/data/layers/bronze/git/CVEProject/cvelistV5/cves/*/*/CVE-*.json',
+        maximum_sample_files = -1
+    )
+);
+
+-- It's easier to read 1 file rather than 385,313 files
+COPY _cves TO '~/src/whitfieldsdad/data/layers/silver/processed/mitre-cve/cves.jsonl.gz';
+COPY _cves TO '~/src/whitfieldsdad/data/layers/silver/processed/mitre-cve/cves.parquet';
+
+-- CVEs to descriptions
+-- * Includes one description per CVE (English only)
+CREATE OR REPLACE TABLE _cves_to_descriptions AS (
+    SELECT
+        cve_id,
+        MAX(description.value) AS "description"
+    FROM (
+        SELECT
+            cveMetadata.cveId AS cve_id,
+            UNNEST(containers.cna.descriptions) AS "description"
+        FROM _cves
+    )
+    WHERE description.lang IN ['en', 'en-US']
+    GROUP BY cve_id
+    ORDER BY cve_id DESC
+);
+
+-- CVEs
+CREATE OR REPLACE TABLE cves AS (
+    SELECT 
+        v.cveMetadata.cveId AS id,
+        d."description" AS "description",
+        v.cveMetadata."state",
+        v.cveMetadata.dateUpdated AS date_updated,
+        v.cveMetadata.datePublished AS date_published,
+        v.cveMetadata.dateReserved AS date_reserved
+    FROM _cves v
+    LEFT JOIN _cves_to_descriptions d ON v.cveMetadata.cveId = d.cve_id
+    ORDER BY id DESC
+);
+
+-- CVEs to CVSS vectors
+-- * Includes CVSS 2, 3, 3.1, 4 vectors
+CREATE OR REPLACE TABLE cves_to_cvss_vectors AS (
+    SELECT
+        *
+    FROM (
+        SELECT
+            cve_id,
+            metrics.cvssV2_0.vectorString AS cvss_2_0_vector,
+            metrics.cvssV3_0.vectorString AS cvss_3_0_vector,
+            metrics.cvssV3_1.vectorString AS cvss_3_1_vector,
+            metrics.cvssV4_0.vectorString AS cvss_4_0_vector
+        FROM (
+            SELECT
+                cveMetadata.cveId AS cve_id,
+                UNNEST(containers.cna.metrics) AS metrics
+            FROM _cves
+        )
+    )
+    WHERE cvss_2_0_vector IS NOT NULL OR 
+          cvss_3_0_vector IS NOT NULL OR
+          cvss_3_1_vector IS NOT NULL OR
+          cvss_4_0_vector IS NOT NULL
+    ORDER BY cve_id DESC
+);
+
+-- CVEs to CWEs (i.e. vulnerabilities to weaknesses)
+CREATE OR REPLACE TABLE cves_to_cwes AS (
+    SELECT
+        cve_id,
+        cwe_id
+    FROM (
+        SELECT
+            cve_id,
+            "description".cweId AS cwe_id
+        FROM (
+            SELECT
+                cve_id,
+                UNNEST(problem.descriptions) AS "description"
+            FROM (
+                SELECT
+                    cveMetadata.cveId AS cve_id,
+                    UNNEST(containers.cna.problemTypes) AS problem
+                FROM _cves
+            )
+        )
+    )
+    WHERE cwe_id IS NOT NULL
+    ORDER BY cve_id DESC, cwe_id ASC
+);
+
+-- CVEs to CISA Stakeholder-Specific Vulnerability Categorization (SSVC)
+-- * TODO: investigate why this takes so long (~166 seconds as of 2026-09-01)
+CREATE OR REPLACE TABLE cves_to_ssvc AS (
+    WITH ssvc_metrics AS (
+        SELECT
+            cveMetadata.cveId AS cve_id,
+            adp_container.providerMetadata.orgId AS org_id,
+            metric.other.content.timestamp AS "timestamp",
+            metric.other.content.role AS ssvc_role,
+            metric.other.content.version AS ssvc_version,
+            metric.other.content.options AS options
+        FROM _cves
+        CROSS JOIN UNNEST(containers.adp) AS adp(adp_container)
+        CROSS JOIN UNNEST(adp_container.metrics) AS m(metric)
+        WHERE metric.other."type" = 'ssvc'
+    )
+    SELECT
+        cve_id,
+        org_id,
+        "timestamp",
+        ssvc_role,
+        ssvc_version,
+        MAX("option"."Exploitation") AS exploitation,
+        MAX("option"."Automatable") AS automatable,
+        MAX("option"."Technical Impact") AS technical_impact
+    FROM ssvc_metrics
+    CROSS JOIN UNNEST(options) AS o(option)
+    GROUP BY *
+    ORDER BY cve_id DESC
+);
+
+-- CVEs to Certificate Naming Authorities (CNAs)
+CREATE OR REPLACE TABLE cves_to_cnas AS (
+    SELECT
+        cveMetadata.cveId AS cve_id,
+        cveMetadata.assignerOrgId AS "cna_id",
+    FROM _cves
+    GROUP BY *
+    ORDER BY cve_id DESC
+);
+
+-- Certificate Naming Authorities (CNAs)
+CREATE OR REPLACE TABLE cna_organizations AS (
+    SELECT
+        cveMetadata.assignerOrgId AS "id",
+        cveMetadata.assignerShortName AS "name"
+    FROM _cves
+    GROUP BY *
+    ORDER BY "name"
+);
+
+-- Authorized Data Publishers (ADP)
+-- * TODO: investigate why this takes so long (~18 seconds as of 2026-09-01)
+CREATE OR REPLACE TABLE adp_organizations AS (
+    SELECT
+        providerMetadata.orgId AS "id",
+        providerMetadata.shortName AS "name"
+    FROM (
+        SELECT 
+            adp_container.providerMetadata
+        FROM _cves
+        CROSS JOIN UNNEST(containers.adp) AS adp(adp_container)
+    )
+    GROUP BY *
+    ORDER BY "name"
+);
+ 
+-- CVEs to external references
+CREATE OR REPLACE TABLE cves_to_external_references AS (
+    SELECT
+        cve_id,
+        "name",
+        "url",
+        regexp_extract("url", 'https?://([^/]+)', 1) AS domain,
+        tags,
+    FROM (
+        SELECT
+            cve_id,
+            ref.name,
+            ref.url,
+            ref.tags,
+        FROM (
+            SELECT
+                cveMetadata.cveId AS cve_id,
+                UNNEST(containers.cna."references") AS ref
+            FROM _cves
+        )
+        UNION ALL BY NAME
+        SELECT
+            cve_id,
+            ref.name,
+            ref.url,
+            ref.tags,
+        FROM (
+            SELECT
+                cve_id,
+                UNNEST(adp.references) AS ref
+            FROM (
+                SELECT
+                    cveMetadata.cveId AS cve_id,
+                    UNNEST(containers.adp) AS adp
+                FROM _cves
+            )
+        )
+    )
+    ORDER BY cve_id DESC, "name"
+);
+
+-- CVEs to Metasploit modules
+-- * Add GitHub link for each Metasploit module
+-- * Verify that the module exists in the Git repository using glob()
+CREATE OR REPLACE TABLE cves_to_metasploit_modules AS (
+    SELECT
+        cve_id,
+        "url",
+        regexp_extract("url", '(?i)(?:^|/)modules/((?:exploits?|auxiliaries|posts?|payloads?|encoders?|nops?)/.+?)(?:\\.(?:rb|pm))?(?:[?#]|$)', 1) AS module
+    FROM (
+        SELECT
+            cve_id,
+            regexp_extract(
+                "url", 
+                '^(?:https?://)?(?:www\.)?([^/:]+)', 
+                1
+            ) AS domain,
+            "url",
+        FROM cves_to_external_references
+    )
+    WHERE module != ''
+);
+
+COPY cves TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cves.parquet';
+COPY cves_to_cvss_vectors TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cves-to-cvss-vectors.parquet';
+COPY cves_to_cwes TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cves-to-cwes.parquet';
+COPY cves_to_ssvc TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cves-to-ssvc.parquet';
+COPY cves_to_cnas TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cves-to-cnas.parquet';
+COPY cna_organizations TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cna-organizations.parquet';
+COPY adp_organizations TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/adp-organizations.parquet';
+COPY cves_to_external_references TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cves-to-external-references.parquet';
+COPY cves_to_metasploit_modules TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cve/cves-to-metasploit-modules.parquet';
