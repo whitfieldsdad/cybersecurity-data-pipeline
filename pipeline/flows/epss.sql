@@ -74,29 +74,28 @@ CREATE OR REPLACE TABLE epss_scores AS (
         cve,
         epss,
         percentile
-    FROM epss_score_changelog;
+    FROM epss_score_changelog
 );
 
 -- EPSS score history
 -- * Includes current, min, max `epss` and `percentile` for each CVE
-CREATE OR REPLACE TABLE epss_score_history AS (
-    SELECT
-        cve,
-        MIN("date") AS min_date,
-        MAX("date") AS max_date,
-        MIN(epss) AS min_epss,
-        MAX(epss) AS max_epss,
-        MIN(percentile) AS min_percentile,
-        MAX(percentile) AS max_percentile,
-        arg_min("date", epss) AS min_epss_date,
-        arg_max("date", epss) AS max_epss_date,
-        arg_min("date", percentile) AS min_percentile_date,
-        arg_max("date", percentile) AS max_percentile_date
-    FROM epss_score_changelog
-    GROUP BY cve
-    WINDOW epss_history AS (PARTITION BY cve ORDER BY "date" ASC)
-    ORDER BY cve DESC
-);
+CREATE OR REPLACE TABLE epss_score_history AS
+SELECT
+    MAX("date") AS "date",
+    cve,
+    MIN("date") AS earliest_date,
+    MIN(epss) AS min_epss,
+    MAX(epss) AS max_epss,
+    arg_min(epss, "date") AS earliest_epss,
+    arg_max(epss, "date") AS epss,
+    arg_min(percentile, "date") AS earliest_percentile,
+    arg_max(percentile, "date") AS percentile,
+    arg_min("date", epss) AS min_epss_date,
+    arg_max("date", epss) AS max_epss_date
+FROM epss_score_changelog
+GROUP BY cve
+ORDER BY cve DESC;
+
 
 COPY epss_scores TO '~/src/whitfieldsdad/data/layers/silver/relational/epss-scores/epss-scores.parquet';
 COPY epss_score_changelog TO '~/src/whitfieldsdad/data/layers/silver/relational/epss-scores/epss-score-changelog.parquet';
