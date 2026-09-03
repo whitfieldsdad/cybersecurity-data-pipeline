@@ -13,29 +13,33 @@ CREATE OR REPLACE TABLE modules AS (
 
 CREATE OR REPLACE TABLE _modules_to_references AS (
     SELECT
-        module,
+        "module",
         module_type,
         ref AS reference
     FROM (
         SELECT
-            module,
+            "name" AS module,
             module_type,
             UNNEST("references") AS ref
         FROM modules
     )
-    ORDER BY module, reference DESC
+    ORDER BY "module", reference DESC
 );
 
 CREATE OR REPLACE TABLE modules_to_cwes AS (
     SELECT
-        *
+        module,
+        module_type,
+        reference AS cwe_id
     FROM _modules_to_references
     WHERE reference LIKE 'CWE-%'
 );
 
 CREATE OR REPLACE TABLE modules_to_cves AS (
     SELECT
-        *
+        module,
+        module_type,
+        reference AS cve_id
     FROM _modules_to_references
     WHERE reference LIKE 'CVE-%'
 );
