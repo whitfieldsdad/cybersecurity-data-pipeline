@@ -1,0 +1,56 @@
+SET preserve_insertion_order = false;
+
+-- Metasploit modules
+CREATE OR REPLACE TABLE _modules AS (
+    SELECT * FROM read_json('{{ data_dir }}/layers/silver/processed/metasploit-framework/modules.jsonl')
+);
+
+CREATE OR REPLACE TABLE modules AS (
+    SELECT 
+        "name",
+        "fullname" AS full_name,
+        "path",
+        "description",
+        "type" AS module_type,
+    FROM _modules
+);
+
+CREATE OR REPLACE TABLE _modules_to_references AS (
+    SELECT
+        "fullname" AS "full_name",
+        "path",
+        UNNEST("references") AS "ref"
+    FROM _modules
+);
+
+CREATE OR REPLACE TABLE modules_to_cwes AS (
+    SELECT
+        "full_name",
+        "path",
+        "ref" AS cwe_id
+    FROM _modules_to_references
+    WHERE "ref" LIKE 'CWE-%'
+);
+
+CREATE OR REPLACE TABLE modules_to_cves AS (
+    SELECT
+        "full_name",
+        "path",
+        "ref" AS cve_id
+    FROM _modules_to_references
+    WHERE "ref" LIKE 'CVE-%'
+);
+
+CREATE OR REPLACE TABLE modules_to_attack AS (
+    SELECT
+        "full_name",
+        "path",
+        REPLACE("ref", 'ATT&CK-', '') AS attack_technique_id
+    FROM _modules_to_references
+    WHERE "ref" LIKE 'ATT&CK-T1%'
+);
+
+COPY modules TO '{{ data_dir }}/layers/silver/relational/metasploit-framework/modules.parquet';
+COPY modules_to_cves TO '{{ data_dir }}/layers/silver/relational/metasploit-framework/modules-to-cves.parquet';
+COPY modules_to_cwes TO '{{ data_dir }}/layers/silver/relational/metasploit-framework/modules-to-cwes.parquet';
+COPY modules_to_attack TO '{{ data_dir }}/layers/silver/relational/metasploit-framework/modules-to-attack.parquet';
