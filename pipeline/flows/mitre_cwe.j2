@@ -1,0 +1,83 @@
+SET preserve_insertion_order = false;
+
+CREATE OR REPLACE TABLE _cwe AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/processed/mitre-cwe/weaknesses.json'
+);
+
+CREATE OR REPLACE TABLE _weaknesses AS (
+    SELECT
+        weakness.*
+    FROM (
+        SELECT
+            UNNEST(weaknesses) AS weakness
+        FROM _cwe
+    )
+    ORDER BY weakness.id
+);
+
+CREATE OR REPLACE TABLE weaknesses AS (
+    SELECT
+        id,
+        "name",
+        abstraction,
+        structure,
+        "status",
+        "description",
+        "extended_description",
+        "likelihood_of_exploitation"
+    FROM _weaknesses
+);
+
+-- Weaknesses to consequences
+-- * TODO: include notes
+CREATE OR REPLACE TABLE weaknesses_to_consequences AS (
+    SELECT
+        weakness_id,
+        consequence.scope,
+        consequence.impact,
+        --consequence.note
+    FROM (
+        SELECT
+            id AS weakness_id,
+            UNNEST(common_consequences) AS consequence
+        FROM _weaknesses
+    )
+);
+
+-- Weaknesses to modes of introduction
+-- * TODO: include notes
+CREATE OR REPLACE TABLE weaknesses_to_modes_of_introduction AS (
+    SELECT
+        weakness_id,
+        mode_of_introduction.phase,
+        --mode_of_introduction.note
+    FROM (
+        SELECT
+            id AS weakness_id,
+            UNNEST(modes_of_introduction) AS mode_of_introduction
+        FROM _weaknesses
+    )
+    ORDER BY mode_of_introduction.phase, weakness_id
+);
+
+-- Weaknesses to detection methods
+CREATE OR REPLACE TABLE weaknesses_to_detection_methods AS (
+    SELECT
+        weakness_id,
+        m.id AS detection_method_id,
+        m.name AS detection_method_name,
+        m.description AS detection_method_description,
+        m.effectiveness AS detection_method_effectiveness
+    FROM (
+        SELECT
+            id AS weakness_id,
+            UNNEST(detection_methods) AS m
+        FROM _weaknesses
+    )
+    ORDER BY m.id, weakness_id
+);
+
+COPY weaknesses TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses.parquet';
+COPY weaknesses_to_consequences TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses_to_consequences.parquet';
+COPY weaknesses_to_modes_of_introduction TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses_to_modes_of_introduction.parquet';
+COPY weaknesses_to_detection_methods TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses_to_detection_methods.parquet';
