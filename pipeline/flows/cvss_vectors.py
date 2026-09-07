@@ -29,6 +29,8 @@ PARSERS = {
     CVSS_4_0: CVSS4,
 }
 
+REPLACE_NOT_DEFINED_WITH_NULL = True
+
 
 class Flow(FlowSpec):
     @step
@@ -51,8 +53,13 @@ class Flow(FlowSpec):
             expanded_vectors = list(map(expand_cvss_vector, vectors))
 
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            df = pl.DataFrame(expanded_vectors)
-            df.write_parquet(output_path)
+            df = pl.DataFrame(expanded_vectors).to_pandas()
+
+            # Replace any column value of `not-defined` with None
+            for col in df.columns:
+                df[col] = df[col].replace('not-defined', None)
+
+            df.to_parquet(output_path)
 
         self.next(self.end)
 
@@ -76,6 +83,7 @@ def expand_cvss_vector(vector: str) -> dict:
             if k != 'vector_string':
                 v = v.lower()
                 v = v.replace('_', '-')
+
         raw[k] = v
 
     return raw
