@@ -11,6 +11,7 @@ docs:
 
 data:
 	poetry run python3 -m pipeline.flows.git.flow run
+	poetry run python3 -m pipeline.flows.stix2.flow run
 	poetry run python3 -m pipeline.flows.cisa_kev.flow run
 	poetry run python3 -m pipeline.flows.metasploit_framework.flow run
 	poetry run python3 -m pipeline.flows.mitre_cve.flow run

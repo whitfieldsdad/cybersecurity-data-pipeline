@@ -28,10 +28,12 @@ CREATE OR REPLACE TABLE _tools AS (
     SELECT * FROM '{{ data_dir }}/layers/silver/relational/mitre-attack/tools.parquet'
 );
 
+-- TODO: empty
 CREATE OR REPLACE TABLE _techniques_to_malware AS (
     SELECT * FROM '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques-to-malware.parquet'
 );
 
+-- TODO: empty
 CREATE OR REPLACE TABLE _techniques_to_tools AS (
     SELECT * FROM '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques-to-tools.parquet'
 );
