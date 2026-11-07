@@ -6,6 +6,9 @@ init:
 clean:
 	find . -type f -name "._*" -delete
 
+docs:
+	dot -Tpng docs/data-lineage.dot -o docs/data-lineage.png
+
 data:
 	poetry run python3 -m pipeline.flows.git run
 	poetry run python3 -m pipeline.flows.cisa_kev run
@@ -17,4 +20,4 @@ data:
 	poetry run python3 -m pipeline.flows.epss run
 	poetry run python3 -m pipeline.flows.vulnerability_database run
 
-.PHONY: data init clean
+.PHONY: data init clean docs

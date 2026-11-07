@@ -1,0 +1,133 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box, style=filled, fillcolor=gray90];
+    edge [dir=none, color=blue];
+    
+    subgraph cluster_bronze {
+        label="Bronze";
+
+        subgraph cluster_bronze_git {
+            label="Git";
+
+            bronze_git_redcanaryco_atomic_red_team [label="redcanaryco/atomic-red-team"];
+            bronze_git_cveproject_cvelistV5 [label="CVEProject/cvelistV5"];
+            bronze_git_mitre_cti [label="MITRE CTI"];
+            bronze_git_mitre_attack_attack_stix_data [label="mitre-attack/attack-stix-data"];
+            bronze_git_empiricalsec_epss_scores [label="empiricalsec/epss_scores"];
+            bronze_git_rapid7_metasploit_framework [label="rapid7/metasploit-framework"];
+        }
+
+        subgraph cluster_bronze_raw {
+            label="Raw";
+
+            bronze_raw_cisa_kev [label="CISA KEV"];
+        }
+    }
+
+    subgraph cluster_silver {
+        label="Silver";
+
+        subgraph cluster_silver_processed {
+            label="Processed";
+
+            silver_processed_mitre_cwe [label="MITRE CWE"];
+            silver_processed_metasploit_framework [label="Metasploit Framework"];
+        }
+
+        subgraph cluster_silver_hive {
+            label="Hive";
+
+            silver_hive_epss_scores [label="EPSS scores"];
+            silver_relational_epss_scores [label="EPSS scores"];
+            silver_metasploit_framework [label="Metasploit Framework"];
+        }
+
+        subgraph cluster_silver_relational {
+            label="Relational";
+
+            silver_relational_metasploit_framework [label="Metasploit Framework"];
+            silver_relational_mitre_cve [label="MITRE CVE"];
+            silver_relational_mitre_attack [label="MITRE ATT&CK"];
+            silver_relational_mitre_capec [label="MITRE CAPEC"];
+            silver_relational_mitre_cwe [label="MITRE CWE"];
+            silver_relational_cisa_kev [label="CISA KEV"];
+            silver_relational_cvss_vectors [label="CVSS vectors"];
+        } 
+    }
+
+    subgraph cluster_gold {
+        label="Gold";
+
+        subgraph cluster_gold_analyst {
+            label="Analyst";
+
+            gold_analyst_vulnerability_database [label="Vulnerability database"];
+        }
+    }
+    
+    # Bronze to silver
+    bronze_git_mitre_cti -> silver_relational_mitre_capec;
+    bronze_git_rapid7_metasploit_framework -> silver_metasploit_framework;
+    bronze_git_empiricalsec_epss_scores -> silver_hive_epss_scores;
+
+    bronze_raw_cisa_kev -> silver_relational_cisa_kev;
+
+    # Silver to silver
+    silver_processed_metasploit_framework -> silver_relational_metasploit_framework;
+    silver_processed_mitre_cwe -> silver_relational_mitre_cwe;
+
+    silver_hive_epss_scores -> silver_relational_epss_scores;
+
+    silver_relational_mitre_cve -> silver_relational_cvss_vectors;
+
+    # Silver to gold
+    silver_relational_cvss_vectors -> gold_analyst_vulnerability_database;
+    silver_relational_epss_scores -> gold_analyst_vulnerability_database;
+    silver_relational_metasploit_framework -> gold_analyst_vulnerability_database;
+    silver_relational_cisa_kev -> gold_analyst_vulnerability_database;
+    silver_relational_mitre_cve -> gold_analyst_vulnerability_database;
+
+    # Layout: invisible edges force subgraphs side by side (left to right)
+    edge [style=invis];
+
+    # Git -> Raw
+    {
+        bronze_git_redcanaryco_atomic_red_team
+        bronze_git_cveproject_cvelistV5
+        bronze_git_mitre_cti
+        bronze_git_mitre_attack_attack_stix_data
+        bronze_git_empiricalsec_epss_scores
+        bronze_git_rapid7_metasploit_framework
+    } -> bronze_raw_cisa_kev;
+
+    # Raw -> Processed
+    bronze_raw_cisa_kev -> {
+        silver_processed_mitre_cwe
+        silver_processed_metasploit_framework
+    };
+
+    # Processed -> Hive
+    {
+        silver_processed_mitre_cwe
+        silver_processed_metasploit_framework
+    } -> {
+        silver_hive_epss_scores
+        silver_metasploit_framework
+    };
+
+    # Hive -> Relational
+    {
+        silver_relational_epss_scores
+        silver_metasploit_framework
+    } -> {
+        silver_relational_metasploit_framework
+        silver_relational_mitre_cve
+        silver_relational_mitre_attack
+        silver_relational_mitre_capec
+        silver_relational_mitre_cwe
+        silver_relational_cisa_kev
+    };
+
+    # Relational -> Gold
+    silver_relational_cvss_vectors -> gold_analyst_vulnerability_database;
+}
