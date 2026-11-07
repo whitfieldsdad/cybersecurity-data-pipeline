@@ -1,6 +1,10 @@
 import os
+import tempfile
 
 from pipeline import files
+
+COMPONENT_ID = '79527e84-f8c0-4ee6-97fd-637ae4c4c211'
+COMPONENT_TEMP_DIR = os.path.join(tempfile.gettempdir(), COMPONENT_ID)
 
 DATA_PIPELINE_DIR = files.get_project_root()
 DATA_DIR = files.get_real_path('~/src/whitfieldsdad/data')

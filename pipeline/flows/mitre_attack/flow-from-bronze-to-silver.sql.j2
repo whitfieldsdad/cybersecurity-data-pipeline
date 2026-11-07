@@ -39,19 +39,8 @@ CREATE OR REPLACE TABLE _relationships AS (
         o.relationship_type,
         o.target_ref,
         string_split(o.target_ref, '--')[1] AS target_type
-    FROM objects
+    FROM _objects
     WHERE o."type" = 'relationship'
-);
-
-CREATE OR REPLACE TABLE _total_relationships_by_type AS (
-    SELECT
-        source_type,
-        relationship_type,
-        target_type,
-        COUNT(*) AS total
-    FROM _relationships
-    GROUP BY source_type, relationship_type, target_type
-    ORDER BY source_type, relationship_type, target_type
 );
 
 CREATE OR REPLACE TABLE tactics AS (
@@ -231,6 +220,18 @@ CREATE OR REPLACE TABLE intrusion_sets_to_tools AS (
     WHERE r.relationship_type = 'uses'
 );
 
+CREATE OR REPLACE TABLE intrusion_sets_to_techniques AS (
+    SELECT
+        i.id AS intrusion_set_id,
+        i.stix_id AS intrusion_set_stix_id,
+        t.id AS technique_id,
+        t.stix_id AS technique_stix_id
+    FROM _relationships r
+    JOIN intrusion_sets i ON r.source_ref = i.stix_id
+    JOIN techniques t ON r.target_ref = t.stix_id
+    WHERE r.relationship_type = 'uses'
+);
+
 CREATE OR REPLACE TABLE campaigns_to_intrusion_sets AS (
     SELECT
         c.id AS campaign_id,
@@ -293,25 +294,26 @@ CREATE OR REPLACE TABLE detection_strategies_to_techniques AS (
 
 COPY tactics TO '{{ data_dir }}/layers/silver/relational/mitre-attack/tactics.parquet';
 COPY techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques.parquet';
-COPY intrusion_sets TO '{{ data_dir }}/layers/silver/relational/mitre-attack/intrusion_sets.parquet';
+COPY intrusion_sets TO '{{ data_dir }}/layers/silver/relational/mitre-attack/intrusion-sets.parquet';
 COPY malware TO '{{ data_dir }}/layers/silver/relational/mitre-attack/malware.parquet';
 COPY tools TO '{{ data_dir }}/layers/silver/relational/mitre-attack/tools.parquet';
 COPY campaigns TO '{{ data_dir }}/layers/silver/relational/mitre-attack/campaigns.parquet';
-COPY courses_of_action TO '{{ data_dir }}/layers/silver/relational/mitre-attack/courses_of_action.parquet';
-COPY detection_strategies TO '{{ data_dir }}/layers/silver/relational/mitre-attack/detection_strategies.parquet';
+COPY courses_of_action TO '{{ data_dir }}/layers/silver/relational/mitre-attack/courses-of-action.parquet';
+COPY detection_strategies TO '{{ data_dir }}/layers/silver/relational/mitre-attack/detection-strategies.parquet';
 
-COPY tactics_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/tactics_to_techniques.parquet';
+COPY tactics_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/tactics-to-techniques.parquet';
 
-COPY techniques_to_intrusion_sets TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques_to_intrusion_sets.parquet';
-COPY techniques_to_courses_of_action TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques_to_courses_of_action.parquet';
-COPY techniques_to_malware TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques_to_malware.parquet';
-COPY techniques_to_tools TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques_to_tools.parquet';
+COPY techniques_to_intrusion_sets TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques-to-intrusion-sets.parquet';
+COPY techniques_to_courses_of_action TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques-to-courses-of-action.parquet';
+COPY techniques_to_malware TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques-to-malware.parquet';
+COPY techniques_to_tools TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques-to-tools.parquet';
 
-COPY intrusion_sets_to_malware TO '{{ data_dir }}/layers/silver/relational/mitre-attack/intrusion_sets_to_malware.parquet';
-COPY intrusion_sets_to_tools TO '{{ data_dir }}/layers/silver/relational/mitre-attack/intrusion_sets_to_tools.parquet';
+COPY intrusion_sets_to_malware TO '{{ data_dir }}/layers/silver/relational/mitre-attack/intrusion-sets-to-malware.parquet';
+COPY intrusion_sets_to_tools TO '{{ data_dir }}/layers/silver/relational/mitre-attack/intrusion-sets-to-tools.parquet';
+COPY intrusion_sets_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/intrusion-sets-to-techniques.parquet';
 
-COPY campaigns_to_tools TO '{{ data_dir }}/layers/silver/relational/mitre-attack/campaigns_to_tools.parquet';
-COPY campaigns_to_malware TO '{{ data_dir }}/layers/silver/relational/mitre-attack/campaigns_to_malware.parquet';
-COPY campaigns_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/campaigns_to_techniques.parquet';
+COPY campaigns_to_tools TO '{{ data_dir }}/layers/silver/relational/mitre-attack/campaigns-to-tools.parquet';
+COPY campaigns_to_malware TO '{{ data_dir }}/layers/silver/relational/mitre-attack/campaigns-to-malware.parquet';
+COPY campaigns_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/campaigns-to-techniques.parquet';
 
-COPY detection_strategies_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/detection_strategies_to_techniques.parquet';
+COPY detection_strategies_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/detection-strategies-to-techniques.parquet';

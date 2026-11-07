@@ -6,7 +6,7 @@ import os
 from pipeline.constants import DATA_DIR, SILVER_HIVE_DIR, SILVER_RELATIONAL_DIR, GOLD_ANALYST_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
-J2_FILE = os.path.join(DIR, "epss.j2")
+J2_FILE = os.path.join(DIR, "etl.sql.j2")
 
 
 class Flow(FlowSpec):

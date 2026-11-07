@@ -7,7 +7,7 @@ from cwe.json_encoder import JSONEncoder
 import cwe.client as cwe
 
 DIR = os.path.dirname(os.path.abspath(__file__))
-J2_FILE = os.path.join(DIR, "mitre_cwe.j2")
+J2_FILE = os.path.join(DIR, "etl.sql.j2")
 
 RAW_CWE_PATH = os.path.join(BRONZE_RAW_DIR, "mitre-cwe/mitre-cwe.xml")
 WEAKNESS_CATALOG_PATH = os.path.join(SILVER_PROCESSED_DIR, "mitre-cwe/weaknesses.json")

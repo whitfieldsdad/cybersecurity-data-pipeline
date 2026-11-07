@@ -1,0 +1,30 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box];
+    edge [dir=none];
+
+    _objects;
+    _internal_ids_to_external_ids
+
+    tactics;
+    techniques;
+    intrusion_sets;
+    malware;
+    tools;
+    campaigns;
+    courses_of_action;
+    detection_strategies;
+
+    _objects -> _internal_ids_to_external_ids;
+    _objects -> objects;
+    _objects -> _relationships;
+
+    objects -> tactics;
+    objects -> techniques;
+    objects -> intrusion_sets;
+    objects -> malware;
+    objects -> tools;
+    objects -> campaigns;
+    objects -> courses_of_action;
+    objects -> detection_strategies;
+}

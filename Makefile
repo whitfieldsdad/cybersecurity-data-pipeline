@@ -10,14 +10,14 @@ docs:
 	dot -Tpng docs/data-lineage.dot -o docs/data-lineage.png
 
 data:
-	poetry run python3 -m pipeline.flows.git run
-	poetry run python3 -m pipeline.flows.cisa_kev run
-	poetry run python3 -m pipeline.flows.metasploit_framework run
-	poetry run python3 -m pipeline.flows.mitre_cve run
-	poetry run python3 -m pipeline.flows.cvss_vectors run
-	poetry run python3 -m pipeline.flows.mitre_attack run
-	poetry run python3 -m pipeline.flows.mitre_capec run
-	poetry run python3 -m pipeline.flows.epss run
-	poetry run python3 -m pipeline.flows.vulnerability_database run
+	poetry run python3 -m pipeline.flows.git.flow run
+	poetry run python3 -m pipeline.flows.cisa_kev.flow run
+	poetry run python3 -m pipeline.flows.metasploit_framework.flow run
+	poetry run python3 -m pipeline.flows.mitre_cve.flow run
+	poetry run python3 -m pipeline.flows.cvss_vectors.flow run
+	poetry run python3 -m pipeline.flows.mitre_attack.flow run
+	poetry run python3 -m pipeline.flows.mitre_capec.flow run
+	poetry run python3 -m pipeline.flows.epss.flow run
+	poetry run python3 -m pipeline.flows.vulnerability_database.flow run
 
 .PHONY: data init clean docs

@@ -7,7 +7,7 @@ from pipeline import util
 from pipeline.constants import DATA_DIR, BRONZE_GIT_DIR, SILVER_RELATIONAL_DIR, SILVER_PROCESSED_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
-J2_FILE = os.path.join(DIR, "metasploit_framework.j2")
+J2_FILE = os.path.join(DIR, "etl.sql.j2")
 
 MODULE_METADATA_PATH = os.path.join(BRONZE_GIT_DIR, 'rapid7', 'metasploit-framework', 'db', 'modules_metadata_base.json')
 UNPACKED_MODULE_METADATA_PATH = os.path.join(SILVER_PROCESSED_DIR, 'metasploit-framework', 'modules.jsonl')

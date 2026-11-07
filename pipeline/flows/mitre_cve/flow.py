@@ -3,10 +3,10 @@ import os
 from pipeline import util
 from metaflow import FlowSpec, step
 
-from pipeline.constants import DATA_DIR, SILVER_RELATIONAL_DIR
+from pipeline.constants import DATA_DIR, SILVER_PROCESSED_DIR, SILVER_RELATIONAL_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
-J2_FILE = os.path.join(DIR, "mitre_capec.j2")
+J2_FILE = os.path.join(DIR, "etl.sql.j2")
 
 
 class Flow(FlowSpec):
@@ -16,8 +16,8 @@ class Flow(FlowSpec):
 
     @step
     def process(self):
-        for directory in [SILVER_RELATIONAL_DIR]:
-            os.makedirs(os.path.join(directory, 'mitre-capec'), exist_ok=True)
+        for directory in [SILVER_PROCESSED_DIR, SILVER_RELATIONAL_DIR]:
+            os.makedirs(os.path.join(directory, 'mitre-cve'), exist_ok=True)
 
         util.run_sql_template_file(J2_FILE, data_dir=DATA_DIR)
 

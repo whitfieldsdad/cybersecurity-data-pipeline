@@ -1,0 +1,111 @@
+SET preserve_insertion_order = false;
+
+CREATE OR REPLACE TABLE _tactics AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/tactics.parquet'
+);
+
+CREATE OR REPLACE TABLE _techniques AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/techniques.parquet'
+);
+
+CREATE OR REPLACE TABLE _tactics_to_techniques AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/tactics-to-techniques.parquet'
+);
+ 
+CREATE OR REPLACE TABLE _intrusion_sets AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/intrusion-sets.parquet'
+);
+
+CREATE OR REPLACE TABLE _intrusion_sets_to_techniques AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/intrusion-sets-to-techniques.parquet'
+);
+
+CREATE OR REPLACE TABLE _malware AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/malware.parquet'
+);
+
+CREATE OR REPLACE TABLE _tools AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/tools.parquet'
+);
+
+-- TODO: empty
+CREATE OR REPLACE TABLE _techniques_to_malware AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/techniques-to-malware.parquet'
+);
+
+-- TODO: empty
+CREATE OR REPLACE TABLE _techniques_to_tools AS (
+    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/relational/mitre-attack/techniques-to-tools.parquet'
+);
+
+CREATE OR REPLACE TABLE tactics AS (
+    SELECT 
+        id, 
+        "name"
+    FROM _tactics
+    ORDER BY id
+);
+
+CREATE OR REPLACE TABLE techniques AS (
+    SELECT 
+        id, 
+        "name"
+    FROM _techniques
+    ORDER BY id
+);
+
+CREATE OR REPLACE TABLE intrusion_sets AS (
+    SELECT 
+        id, 
+        "name"
+    FROM _intrusion_sets
+    ORDER BY id
+);
+
+CREATE OR REPLACE TABLE ttps AS (
+    SELECT
+        tactic.id AS tactic_id,
+        tactic.name AS tactic_name,
+        technique.id AS technique_id,
+        technique.name AS technique_name
+    FROM _tactics_to_techniques t2t
+    JOIN _tactics tactic ON t2t.tactic_id = tactic.id
+    JOIN _techniques technique ON t2t.technique_id = technique.id
+    ORDER BY technique_id, tactic_id
+);
+
+CREATE OR REPLACE TABLE ttps_to_intrusion_sets AS (
+    SELECT
+        intrusion_set.id AS intrusion_set_id,
+        intrusion_set.name AS intrusion_set_name,
+        tactic.id AS tactic_id,
+        tactic.name AS tactic_name,
+        technique.id AS technique_id,
+        technique.name AS technique_name
+    FROM _intrusion_sets_to_techniques i2t
+    JOIN _intrusion_sets intrusion_set ON i2t.intrusion_set_id = intrusion_set.id
+    JOIN _techniques technique ON i2t.technique_id = technique.id
+    JOIN _tactics_to_techniques t2t ON i2t.technique_id = t2t.technique_id
+    JOIN _tactics tactic ON t2t.tactic_id = tactic.id
+    ORDER BY intrusion_set_id, technique_id, tactic_id
+);
+
+CREATE OR REPLACE TABLE ttps_to_malware AS (
+    SELECT
+        malware.id AS malware_id,
+        malware.name AS malware_name,
+        technique.id AS technique_id,
+        technique.name AS technique_name
+    FROM _techniques_to_malware t2m
+    JOIN _malware malware ON t2m.malware_id = malware.id
+    JOIN _techniques technique ON t2m.technique_id = technique.id
+);
+
+COPY tactics TO '~/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/tactics.parquet';
+COPY techniques TO '~/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/techniques.parquet';
+COPY intrusion_sets TO '~/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/intrusion-sets.parquet';
+
+COPY ttps TO '~/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/ttps.parquet';
+COPY ttps_to_intrusion_sets TO '~/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/ttps-to-intrusion-sets.parquet';
+COPY ttps_to_malware TO '~/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/ttps-to-malware.parquet';
+--COPY ttps_to_tools TO '~/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/ttps-to-tools.parquet';
