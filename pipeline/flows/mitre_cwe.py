@@ -1,8 +1,7 @@
 import os
 import json
-import duckdb
-from jinja2 import Template
 from metaflow import FlowSpec, step
+from pipeline import util
 from pipeline.constants import BRONZE_RAW_DIR, DATA_DIR, JSON_INDENT, SILVER_PROCESSED_DIR
 from cwe.json_encoder import JSONEncoder
 import cwe.client as cwe
@@ -36,13 +35,7 @@ class Flow(FlowSpec):
 
     @step
     def process(self):
-        with duckdb.connect() as conn:
-            with open(J2_FILE, "r") as f:
-                template = Template(f.read())
-                sql = template.render(
-                    data_dir=DATA_DIR,
-                )
-            conn.execute(sql)
+        util.run_sql_template_file(J2_FILE, data_dir=DATA_DIR)
 
         self.next(self.end)
 

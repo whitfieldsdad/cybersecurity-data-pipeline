@@ -1,11 +1,9 @@
 import json
-import jinja2
 import os
 
-import duckdb
 from metaflow import FlowSpec, step
 import requests
-
+from pipeline import util
 from pipeline.constants import BRONZE_RAW_DIR, DATA_DIR, SILVER_RELATIONAL_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,10 +16,10 @@ DOWNLOAD_PATH = os.path.join(BRONZE_RAW_DIR, 'cisa-kev', 'known_exploited_vulner
 class Flow(FlowSpec):
     @step
     def start(self):
-        self.next(self.download)
+        self.next(self.download_cisa_kev)
 
     @step
-    def download(self):
+    def download_cisa_kev(self):
         url = DOWNLOAD_URL
         path = DOWNLOAD_PATH
         
@@ -33,21 +31,14 @@ class Flow(FlowSpec):
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
                     
-        self.next(self.process)
+        self.next(self.process_cisa_kev)
 
     @step
-    def process(self):
+    def process_cisa_kev(self):
         for directory in [SILVER_RELATIONAL_DIR]:
             os.makedirs(os.path.join(directory, 'cisa-kev'), exist_ok=True)
 
-        with duckdb.connect() as conn:
-            with open(J2_FILE, "r") as f:
-                template = jinja2.Template(f.read())
-                sql = template.render(
-                    data_dir=DATA_DIR,
-                )
-
-            conn.execute(sql)
+        util.run_sql_template_file(J2_FILE, data_dir=DATA_DIR)
 
         self.next(self.end)
 

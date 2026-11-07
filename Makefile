@@ -17,4 +17,4 @@ data:
 	poetry run python3 -m pipeline.flows.epss run
 	poetry run python3 -m pipeline.flows.vulnerability_database run
 
-.PHONY: data
+.PHONY: data init clean

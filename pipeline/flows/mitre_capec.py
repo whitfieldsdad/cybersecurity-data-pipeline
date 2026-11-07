@@ -1,13 +1,12 @@
 import os
 
-import duckdb
-from jinja2 import Template
+from pipeline import util
 from metaflow import FlowSpec, step
 
 from pipeline.constants import DATA_DIR, SILVER_RELATIONAL_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
-SQL_FILE = os.path.join(DIR, "mitre_capec.sql")
+J2_FILE = os.path.join(DIR, "mitre_capec.j2")
 
 
 class Flow(FlowSpec):
@@ -20,13 +19,7 @@ class Flow(FlowSpec):
         for directory in [SILVER_RELATIONAL_DIR]:
             os.makedirs(os.path.join(directory, 'mitre-capec'), exist_ok=True)
 
-        with duckdb.connect() as conn:
-            with open(SQL_FILE, "r") as f:
-                template = Template(f.read())
-                sql = template.render(
-                    data_dir=DATA_DIR,
-                )
-            conn.execute(sql)
+        util.run_sql_template_file(J2_FILE, data_dir=DATA_DIR)
 
         self.next(self.end)
 

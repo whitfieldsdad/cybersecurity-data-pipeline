@@ -1,13 +1,16 @@
 import re
 
+import jinja2
 import duckdb
 
 
-def run_duckdb_sql_file(path: str):
+def run_sql_template_file(path: str, **kwargs: dict):
     print(f"Executing SQL file with DuckDB {path}")
     with duckdb.connect() as conn:
         with open(path, "r") as f:
-            sql = f.read()
+            template = jinja2.Template(f.read())
+            sql = template.render(**kwargs)
+
         conn.execute(sql)
 
 

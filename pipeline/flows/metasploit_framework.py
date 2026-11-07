@@ -1,9 +1,8 @@
 import json
 import os
 
-import duckdb
-from jinja2 import Template
 from metaflow import FlowSpec, step
+from pipeline import util
 
 from pipeline.constants import DATA_DIR, BRONZE_GIT_DIR, SILVER_RELATIONAL_DIR, SILVER_PROCESSED_DIR
 
@@ -34,13 +33,7 @@ class Flow(FlowSpec):
         for directory in [SILVER_PROCESSED_DIR, SILVER_RELATIONAL_DIR]:
             os.makedirs(os.path.join(directory, 'metasploit-framework'), exist_ok=True)
 
-        with duckdb.connect() as conn:
-            with open(J2_FILE, "r") as f:
-                template = Template(f.read())
-                sql = template.render(
-                    data_dir=DATA_DIR,
-                )
-            conn.execute(sql)
+        util.run_sql_template_file(J2_FILE, data_dir=DATA_DIR)
 
         self.next(self.end)
 
