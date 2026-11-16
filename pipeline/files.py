@@ -12,8 +12,10 @@ def get_project_root() -> str:
 
 def git_clone_or_pull(url: str, output_dir: str) -> bool:
     if os.path.exists(output_dir):
+        print(f'Pulling {url} to {output_dir}')
         cmd = ["git", "-C", output_dir, "pull"]
     else:
+        print(f'Cloning {url} to {output_dir}')
         cmd = ["git", "clone", url, output_dir]
 
     try:

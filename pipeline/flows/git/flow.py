@@ -25,7 +25,6 @@ class Flow(FlowSpec):
     def sync_git_repository(self):
         name, url = self.input
         output_dir = os.path.join(self.output_dir, name)
-        print(f"Syncing {name} from {url} to {output_dir}")
 
         os.makedirs(os.path.dirname(output_dir), exist_ok=True)
         files.git_clone_or_pull(url, output_dir)

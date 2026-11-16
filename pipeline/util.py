@@ -1,7 +1,5 @@
 import json
-import os
 import re
-import tempfile
 from hodgepodge import spreadsheet_builder
 
 import jinja2
@@ -11,22 +9,31 @@ from pipeline.constants import COMPONENT_ID, COMPONENT_TEMP_DIR
 
 
 def run_sql_file(path: str):
+    print(f'Processing SQL file with DuckDB: {path}')
     with duckdb.connect() as conn:
         with open(path, "r") as f:
             sql = f.read()
         conn.execute(sql)
 
 
-def run_sql_template_file(path: str, **kwargs: dict):
-    with open(path, "r") as f:
+def run_sql_template_file(template_path: str, **kwargs: dict):
+    if not template_path.endswith('.j2'):
+        raise ValueError("Template filename must end with .j2")
+
+    sql_file_path = template_path[:-3]  # Remove the .j2 extension
+    if not sql_file_path.endswith('.sql'):
+        raise ValueError("SQL filename must end with .sql")
+
+    print(f'Rendering SQL template: {template_path}')
+    with open(template_path, "r") as f:
         template = jinja2.Template(f.read())
         sql = template.render(**kwargs)
 
-    os.makedirs(COMPONENT_TEMP_DIR, exist_ok=True)
-    with tempfile.NamedTemporaryFile(dir=COMPONENT_TEMP_DIR, mode="w+", suffix=".sql", delete=True) as tmp:
-        tmp.write(sql)
-        tmp.flush()
-        run_sql_file(tmp.name)
+    print(f'Generating SQL file: {sql_file_path}')
+    with open(sql_file_path, "w") as f:
+        f.write(sql)
+
+    run_sql_file(sql_file_path)
 
 
 def build_workbook(config_path: str, output_path: str, **kwargs: dict):

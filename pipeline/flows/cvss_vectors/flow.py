@@ -39,7 +39,9 @@ class Flow(FlowSpec):
 
     @step
     def expand_vectors(self):
+        print('Reading CVSS vectors from MITRE CVE')
         cves_to_cvss_vectors = pl.read_parquet(CVES_TO_CVSS_VECTORS_PATH)
+
         for name, column, output_path in [
             ('CVSS 2.0', "cvss_2_0_vector", CVSS_2_0_VECTORS_PATH),
             ('CVSS 3.0', "cvss_3_0_vector", CVSS_3_0_VECTORS_PATH),

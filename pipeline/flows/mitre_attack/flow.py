@@ -8,9 +8,6 @@ from pipeline.constants import DATA_DIR, SILVER_RELATIONAL_DIR, GOLD_ANALYST_DIR
 DIR = os.path.dirname(os.path.abspath(__file__))
 ETL_A = os.path.join(DIR, "flow-from-bronze-to-silver.sql.j2")
 ETL_B = os.path.join(DIR, "flow-from-silver-to-gold.sql.j2")
-#ETL_A = os.path.join(DIR, "flow-from-bronze-to-silver.sql")
-#ETL_B = os.path.join(DIR, "flow-from-silver-to-gold.sql")
-
 
 class Flow(FlowSpec):
     @step

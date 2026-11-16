@@ -16,6 +16,7 @@ class Flow(FlowSpec):
 
     @step
     def process_scores(self):
+        print('Processing EPSS scores')
         for directory in [SILVER_HIVE_DIR, SILVER_RELATIONAL_DIR, GOLD_ANALYST_DIR]:
             os.makedirs(os.path.join(directory, 'epss-scores'), exist_ok=True)
 
