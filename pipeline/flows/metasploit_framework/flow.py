@@ -5,7 +5,7 @@ from metaflow import step
 from pipeline.flows.base.flow import BaseFlow
 from pipeline import util
 
-from pipeline.constants import DATA_DIR, BRONZE_GIT_DIR, SILVER_RELATIONAL_DIR, SILVER_PROCESSED_DIR
+from pipeline.constants import DATA_DIR, BRONZE_GIT_DIR, SILVER_PROCESSED_DIR, SILVER_RELATIONAL_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 J2_FILE = os.path.join(DIR, "etl.sql.j2")
@@ -21,6 +21,10 @@ class Flow(BaseFlow):
 
     @step
     def unpack(self):
+        for directory in [BRONZE_GIT_DIR, SILVER_PROCESSED_DIR, SILVER_RELATIONAL_DIR]:
+            subdirectory = os.path.join(directory, 'metasploit-framework')
+            os.makedirs(subdirectory, exist_ok=True)
+        
         with open(MODULE_METADATA_PATH, "r") as input_file:
             with open(UNPACKED_MODULE_METADATA_PATH, "w") as output_file:
                 db = json.load(input_file)
@@ -31,9 +35,6 @@ class Flow(BaseFlow):
 
     @step
     def process(self):
-        for directory in [SILVER_PROCESSED_DIR, SILVER_RELATIONAL_DIR]:
-            os.makedirs(os.path.join(directory, 'metasploit-framework'), exist_ok=True)
-
         util.run_sql_template_file(J2_FILE, data_dir=DATA_DIR)
 
         self.next(self.end)
