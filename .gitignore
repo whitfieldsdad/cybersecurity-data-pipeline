@@ -3,6 +3,10 @@ __pycache__/
 .vscode/
 .metaflow/
 
+pipeline/.tmp
+
+notes/
+
 test.*
 
 # Generated from `etl.sql.j2` files - rendered copy of SQL file - can be executed from the command line with DuckDB
