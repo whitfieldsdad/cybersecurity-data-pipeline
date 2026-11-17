@@ -1,7 +1,8 @@
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.end)

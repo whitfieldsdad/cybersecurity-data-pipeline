@@ -1,7 +1,8 @@
 import os
 
 from pipeline import util
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 
 from pipeline.constants import DATA_DIR, SILVER_RELATIONAL_DIR
 
@@ -9,7 +10,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 J2_FILE = os.path.join(DIR, "etl.sql.j2")
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.process)

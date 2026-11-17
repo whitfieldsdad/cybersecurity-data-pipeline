@@ -1,4 +1,5 @@
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 from pipeline import files
 import os
 
@@ -14,7 +15,7 @@ GIT_REPOSITORIES = {
     "rapid7/metasploit-framework": "https://github.com/rapid7/metasploit-framework.git"
 }
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.output_dir = os.path.join(DATA_DIR, 'layers/bronze/git/')

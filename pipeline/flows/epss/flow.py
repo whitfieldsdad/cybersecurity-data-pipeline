@@ -1,5 +1,5 @@
-from jinja2 import Template
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 from pipeline import util
 import os
 
@@ -9,7 +9,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 J2_FILE = os.path.join(DIR, "etl.sql.j2")
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.process_scores)

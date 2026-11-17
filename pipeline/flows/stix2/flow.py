@@ -1,6 +1,7 @@
 import os
 
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 from hodgepodge import stix
 from pipeline.constants import BRONZE_GIT_DIR, SILVER_STIX2_DIR
 
@@ -13,7 +14,7 @@ STIX2_BUNDLES = {
 }
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.expand_stix2_bundle)

@@ -1,7 +1,8 @@
 import json
 import os
 
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 import requests
 from pipeline import util
 from pipeline.constants import BRONZE_RAW_DIR, DATA_DIR, SILVER_RELATIONAL_DIR
@@ -14,7 +15,7 @@ DOWNLOAD_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_v
 DOWNLOAD_PATH = os.path.join(BRONZE_RAW_DIR, 'cisa-kev', 'known_exploited_vulnerabilities.json')
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.download_cisa_kev)

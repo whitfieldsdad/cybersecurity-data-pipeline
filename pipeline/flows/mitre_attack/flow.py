@@ -1,6 +1,7 @@
 import os
 
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 from pipeline import util
 
 from pipeline.constants import DATA_DIR, SILVER_RELATIONAL_DIR, GOLD_ANALYST_DIR
@@ -9,7 +10,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 ETL_A = os.path.join(DIR, "flow-from-bronze-to-silver.sql.j2")
 ETL_B = os.path.join(DIR, "flow-from-silver-to-gold.sql.j2")
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.process)

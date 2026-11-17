@@ -1,4 +1,5 @@
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 from pipeline.constants import BRONZE_RAW_DIR, SILVER_PROCESSED_DIR
 
 import cwe.client
@@ -11,7 +12,7 @@ RAW_CWE_PATH = os.path.join(BRONZE_RAW_DIR, "mitre-cwe/weakness-catalog.xml")
 PROCESSED_CWE_PATH = os.path.join(SILVER_PROCESSED_DIR, "mitre-cwe/weakness-catalog.json")
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.download)

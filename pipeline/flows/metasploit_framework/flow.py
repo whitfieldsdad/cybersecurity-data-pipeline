@@ -1,7 +1,8 @@
 import json
 import os
 
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 from pipeline import util
 
 from pipeline.constants import DATA_DIR, BRONZE_GIT_DIR, SILVER_RELATIONAL_DIR, SILVER_PROCESSED_DIR
@@ -13,7 +14,7 @@ MODULE_METADATA_PATH = os.path.join(BRONZE_GIT_DIR, 'rapid7', 'metasploit-framew
 UNPACKED_MODULE_METADATA_PATH = os.path.join(SILVER_PROCESSED_DIR, 'metasploit-framework', 'modules.jsonl')
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.unpack)

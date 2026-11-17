@@ -1,6 +1,7 @@
 import os
 
-from metaflow import FlowSpec, step
+from metaflow import step
+from pipeline.flows.base.flow import BaseFlow
 from pipeline.constants import SILVER_RELATIONAL_DIR
 from pipeline import util
 from cvss import CVSS2, CVSS3, CVSS4
@@ -32,7 +33,7 @@ PARSERS = {
 REPLACE_NOT_DEFINED_WITH_NULL = True
 
 
-class Flow(FlowSpec):
+class Flow(BaseFlow):
     @step
     def start(self):
         self.next(self.expand_vectors)
