@@ -32,7 +32,7 @@ JSON_INDENT = 4
 COMPONENT_ID = '79527e84-f8c0-4ee6-97fd-637ae4c4c211'
 COMPONENT_TEMP_DIR = os.path.join(tempfile.gettempdir(), COMPONENT_ID)
 
-DATA_DIR = os.getenv('DATA_DIR')
+DATA_DIR = files.get_real_path(os.getenv('DATA_DIR'))
 
 BRONZE_DIR = os.path.join(DATA_DIR, 'layers/bronze')
 SILVER_DIR = os.path.join(DATA_DIR, 'layers/silver')
