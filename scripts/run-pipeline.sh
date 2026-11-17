@@ -6,5 +6,6 @@ poetry run python3 -m pipeline.flows.mitre_cve.flow run
 poetry run python3 -m pipeline.flows.cvss_vectors.flow run
 poetry run python3 -m pipeline.flows.mitre_attack.flow run
 poetry run python3 -m pipeline.flows.mitre_capec.flow run
+poetry run python3 -m pipeline.flows.mitre_cwe.flow run
 poetry run python3 -m pipeline.flows.epss.flow run
 poetry run python3 -m pipeline.flows.vulnerability_database.flow run

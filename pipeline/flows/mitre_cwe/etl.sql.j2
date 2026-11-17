@@ -1,83 +1,157 @@
 SET preserve_insertion_order = false;
+SET temp_directory = '/var/tmp/duckdb';
+SET memory_limit = '8GB';
 
 CREATE OR REPLACE TABLE _cwe AS (
-    SELECT * FROM '~/src/whitfieldsdad/data/layers/silver/processed/mitre-cwe/weaknesses.json'
+    SELECT * FROM read_json_auto('{{ data_dir }}/layers/silver/processed/mitre-cwe/weakness-catalog.json', maximum_object_size = 50000000) -- 50 MiB limit
 );
 
 CREATE OR REPLACE TABLE _weaknesses AS (
     SELECT
+        'CWE-' || weakness.id AS cwe_id,
         weakness.*
     FROM (
-        SELECT
+        SELECT 
             UNNEST(weaknesses) AS weakness
         FROM _cwe
     )
-    ORDER BY weakness.id
 );
 
-CREATE OR REPLACE TABLE weaknesses AS (
+CREATE OR REPLACE TABLE _groupings AS (
     SELECT
-        id,
-        "name",
-        abstraction,
-        structure,
-        "status",
-        "description",
-        "extended_description",
-        "likelihood_of_exploitation"
-    FROM _weaknesses
+        g.*
+    FROM (
+        SELECT 
+            UNNEST(groupings) AS g
+        FROM _cwe
+    )
 );
 
--- Weaknesses to consequences
--- * TODO: include notes
-CREATE OR REPLACE TABLE weaknesses_to_consequences AS (
+CREATE OR REPLACE TABLE _views AS (
     SELECT
-        weakness_id,
-        consequence.scope,
-        consequence.impact,
-        --consequence.note
+        v.*
+    FROM (
+        SELECT 
+            UNNEST(views) AS v
+        FROM _cwe
+    )
+);
+
+CREATE OR REPLACE TABLE weaknesses_to_impacts AS (
+    SELECT
+        cwe_id,
+        ARRAY_SORT(consequence.scope) AS scope,
+        ARRAY_SORT(consequence.impact) AS impact,
+        consequence.note AS note,
+        consequence.likelihood AS likelihood
     FROM (
         SELECT
-            id AS weakness_id,
+            cwe_id,
             UNNEST(common_consequences) AS consequence
         FROM _weaknesses
     )
+    ORDER BY *
 );
 
--- Weaknesses to modes of introduction
--- * TODO: include notes
-CREATE OR REPLACE TABLE weaknesses_to_modes_of_introduction AS (
+CREATE OR REPLACE TABLE weaknesses AS (
+    SELECT 
+        w.cwe_id,
+        w."name",
+        w.abstraction,
+        w.structure,
+        w."status",
+        w."description",
+        w.extended_description,
+        w.technical_nuance,
+        ARRAY_SORT(w.functional_areas) AS functional_areas,
+        w.likelihood_of_exploitation,
+        w.affected_resources,
+        'Confidentiality' = ANY(w2i.scope) AS "impacts_confidentiality",
+        'Integrity' = ANY(w2i.scope) AS "impacts_integrity",
+        'Availability' = ANY(w2i.scope) AS "impacts_availability",
+        'Other' = ANY(w2i.scope) AS "impacts_other"
+    FROM _weaknesses w
+    JOIN weaknesses_to_impacts w2i ON w.cwe_id = w2i.cwe_id
+    GROUP BY *
+    ORDER BY *
+);
+
+CREATE OR REPLACE TABLE groupings AS (
     SELECT
-        weakness_id,
-        mode_of_introduction.phase,
-        --mode_of_introduction.note
+        id,
+        "name",
+        "description",
+        "status"
+    FROM _groupings
+    ORDER BY id
+);
+
+CREATE OR REPLACE TABLE views AS (
+    SELECT
+        id,
+        "type",
+        "name",
+        "objective",
+        "status",
+        stakeholder.type AS stakeholder_type,
+        stakeholder.description AS stakeholder_description
     FROM (
         SELECT
-            id AS weakness_id,
-            UNNEST(modes_of_introduction) AS mode_of_introduction
-        FROM _weaknesses
+            id,
+            "type",
+            "name",
+            "objective",
+            "status",
+            UNNEST(audience) AS stakeholder
+        FROM _views
     )
-    ORDER BY mode_of_introduction.phase, weakness_id
+    ORDER BY id
 );
 
--- Weaknesses to detection methods
-CREATE OR REPLACE TABLE weaknesses_to_detection_methods AS (
+CREATE OR REPLACE TABLE groupings_to_weaknesses AS (
     SELECT
-        weakness_id,
-        m.id AS detection_method_id,
-        m.name AS detection_method_name,
-        m.description AS detection_method_description,
-        m.effectiveness AS detection_method_effectiveness
+        grouping_id,
+        ref.view_id,
+        'CWE-' || ref.weakness_id AS cwe_id
     FROM (
         SELECT
-            id AS weakness_id,
-            UNNEST(detection_methods) AS m
-        FROM _weaknesses
+            id AS grouping_id,
+            UNNEST(members) AS ref
+        FROM _groupings
     )
-    ORDER BY m.id, weakness_id
 );
 
-COPY weaknesses TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses.parquet';
-COPY weaknesses_to_consequences TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses_to_consequences.parquet';
-COPY weaknesses_to_modes_of_introduction TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses_to_modes_of_introduction.parquet';
-COPY weaknesses_to_detection_methods TO '~/src/whitfieldsdad/data/layers/silver/relational/mitre-cwe/weaknesses_to_detection_methods.parquet';
+CREATE OR REPLACE TABLE weaknesses_to_techniques AS (
+    SELECT
+        cwe_id,
+        'CAPEC-' || capec_id AS capec_id
+    FROM (
+        SELECT 
+            cwe_id,
+            UNNEST(related_attack_patterns) AS capec_id
+        FROM _weaknesses
+    )
+    ORDER BY *
+);
+
+CREATE OR REPLACE TABLE weaknesses_to_vulnerabilities AS (
+    SELECT
+        cwe_id,
+        example.reference AS cve_id
+    FROM (
+        SELECT 
+            cwe_id,
+            UNNEST(observed_examples) AS example
+        FROM _weaknesses
+    )
+    WHERE example.reference LIKE 'CVE-%'
+    ORDER BY cve_id DESC, cwe_id ASC
+);
+
+COPY weaknesses TO '{{ data_dir }}/layers/silver/relational/mitre-cwe/weaknesses.parquet';
+COPY groupings TO '{{ data_dir }}/layers/silver/relational/mitre-cwe/groupings.parquet';
+COPY views TO '{{ data_dir }}/layers/silver/relational/mitre-cwe/views.parquet';
+
+COPY groupings_to_weaknesses TO '{{ data_dir }}/layers/silver/relational/mitre-cwe/groupings-to-weaknesses.parquet';
+COPY weaknesses_to_techniques TO '{{ data_dir }}/layers/silver/relational/mitre-cwe/weaknesses-to-techniques.parquet';
+COPY weaknesses_to_vulnerabilities TO '{{ data_dir }}/layers/silver/relational/mitre-cwe/weaknesses-to-vulnerabilities.parquet';
