@@ -38,13 +38,13 @@ digraph G {
             label="Hive";
 
             silver_hive_epss_scores [label="EPSS scores"];
-            silver_relational_epss_scores [label="EPSS scores"];
             silver_metasploit_framework [label="Metasploit Framework"];
         }
 
         subgraph cluster_silver_relational {
             label="Relational";
 
+            silver_relational_epss_scores [label="EPSS scores"];
             silver_relational_metasploit_framework [label="Metasploit Framework"];
             silver_relational_mitre_cve [label="MITRE CVE"];
             silver_relational_mitre_attack [label="MITRE ATT&CK"];
