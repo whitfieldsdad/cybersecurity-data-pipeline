@@ -36,17 +36,36 @@ def run_sql_template_file(template_path: str, **kwargs: dict):
     run_sql_file(sql_file_path)
 
 
-def build_workbook(config_path: str, output_path: str, **kwargs: dict):
-    print(f'Building workbook from config file: {config_path}')
+def build_workbook_from_template(template_path: str, output_path: str, **kwargs: dict):
+    if not template_path.endswith('.j2'):
+        raise ValueError("Workbook config filename must end with .j2")
 
+    config_path = template_path[:-3]
+    if not config_path.endswith('.json'):
+        raise ValueError("Workbook config filename must end with .json after removing .j2")
+
+    print(f'Rendering workbook template: {template_path}')
+    with open(template_path, "r") as fp:
+        data = fp.read()
+        template = jinja2.Template(data)
+        data = template.render(**kwargs)
+
+    print(f'Generating workbook config file: {config_path}')
+    with open(config_path, "w") as fp:
+        fp.write(data)
+
+    build_workbook(config_path, output_path)
+
+
+def build_workbook(config_path: str, output_path: str):
+    print(f'Building workbook: {output_path}')
+    
     with open(config_path, "r") as fp:
         data = fp.read()
-        if config_path.endswith('.j2'):
-            template = jinja2.Template(data)
-            data = template.render(**kwargs)
-
+    
     config = spreadsheet_builder.parse_workbook_config(json.loads(data))
     spreadsheet_builder.build_workbook(config, output_path)
+
 
 def camelcase_to_snake_case(text: str) -> str:
     return re.sub(r'(?<!^)(?=[A-Z])', '_', text).lower()
