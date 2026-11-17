@@ -3,7 +3,7 @@ from pipeline.flows.base.flow import BaseFlow
 from pipeline import util
 import os
 
-from pipeline.constants import DATA_DIR, SILVER_HIVE_DIR, SILVER_RELATIONAL_DIR, GOLD_ANALYST_DIR
+from pipeline.constants import DATA_DIR, SILVER_HIVE_DIR, SILVER_RELATIONAL_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 J2_FILE = os.path.join(DIR, "etl.sql.j2")
@@ -17,7 +17,7 @@ class Flow(BaseFlow):
     @step
     def process_scores(self):
         print('Processing EPSS scores')
-        for directory in [SILVER_HIVE_DIR, SILVER_RELATIONAL_DIR, GOLD_ANALYST_DIR]:
+        for directory in [SILVER_HIVE_DIR, SILVER_RELATIONAL_DIR]:
             os.makedirs(os.path.join(directory, 'epss-scores'), exist_ok=True)
 
         util.run_sql_template_file(J2_FILE, data_dir=DATA_DIR)
