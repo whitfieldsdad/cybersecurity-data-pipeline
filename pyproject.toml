@@ -15,7 +15,6 @@ packages = [
 python = ">=3.12,<3.14.1 || >3.14.1,<4.0"
 polars = "^1.41.2"
 hodgepodge = { path = "../hodgepodge", develop = true }
-epss = { path = "../epss", develop = true }
 cwe = { path = "../cwe", develop = true }
 dacite = "^1.9.2"
 metaflow = "^2.19.38"
