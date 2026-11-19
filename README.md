@@ -19,31 +19,11 @@
 To run the data pipeline:
 
 ```sh
-./scripts/run-pipeline.sh
+poetry run pipeline
 ```
 
 To run a specific pipeline stage (e.g. `git`):
 
 ```sh
-./scripts/run-pipeline-stage.sh git
-```
-
-To list available pipeline stages:
-
-```sh
-./scripts/list-pipeline-stages.sh
-```
-
-```
-cisa_kev
-cvss_vectors
-epss
-git
-metasploit_framework
-mitre_attack
-mitre_capec
-mitre_cve
-mitre_cwe
-stix2
-vulnerability_database
+poetry run pipeline git
 ```

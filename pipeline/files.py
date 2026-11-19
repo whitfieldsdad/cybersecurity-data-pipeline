@@ -16,7 +16,7 @@ def git_clone_or_pull(url: str, output_dir: str) -> bool:
         cmd = ["git", "-C", output_dir, "pull"]
     else:
         print(f'Cloning {url} to {output_dir}')
-        cmd = ["git", "clone", url, output_dir]
+        cmd = ["git", "clone", url, output_dir, "--depth=1"]
 
     try:
         result = subprocess.run(
