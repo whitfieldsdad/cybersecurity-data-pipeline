@@ -332,18 +332,6 @@ CREATE OR REPLACE TABLE intrusion_sets_to_ttps AS (
     ORDER BY intrusion_set_id, technique_id, tactic_id
 );
 
--- Intrusion sets to campaigns
-CREATE OR REPLACE TABLE intrusion_sets_to_campaigns AS (
-    SELECT
-        intrusion_set_id,
-        intrusion_set_name,
-        intrusion_set_aliases,
-        campaign_id,
-        campaign_name
-    FROM campaigns_to_intrusion_sets
-    ORDER BY intrusion_set_id, campaign_id
-);
-
 -- Intrusion sets to malware
 CREATE OR REPLACE TABLE intrusion_sets_to_malware AS (
     SELECT
@@ -500,7 +488,6 @@ COPY campaigns_to_malware TO '/home/tyler/src/whitfieldsdad/data/layers/gold/ana
 COPY campaigns_to_tools TO '/home/tyler/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/campaigns-to-tools.parquet';
 
 COPY intrusion_sets_to_ttps TO '/home/tyler/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/intrusion-sets-to-ttps.parquet';
-COPY intrusion_sets_to_campaigns TO '/home/tyler/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/intrusion-sets-to-campaigns.parquet';
 COPY intrusion_sets_to_malware TO '/home/tyler/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/intrusion-sets-to-malware.parquet';
 COPY intrusion_sets_to_tools TO '/home/tyler/src/whitfieldsdad/data/layers/gold/analyst/mitre-attack/intrusion-sets-to-tools.parquet';
 
