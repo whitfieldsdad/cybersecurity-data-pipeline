@@ -15,26 +15,31 @@ CREATE OR REPLACE TABLE __objects AS (
 );
 
 -- STIX 2 IDs to ATT&CK IDs
-CREATE OR REPLACE TABLE _internal_ids_to_external_ids AS (
+CREATE OR REPLACE TABLE stix_ids_to_external_ids AS (
     SELECT
         stix_id,
-        ref.external_id AS id
+        ref.external_id AS external_id,
+        "type",
+        "name"
     FROM (
         SELECT
             o.id AS stix_id,
+            o.type,
+            o.name,
             UNNEST(o."external_references") AS ref
         FROM __objects
     )
     WHERE ref.source_name = 'mitre-attack'
+    ORDER BY "type", external_id
 );
 
 CREATE OR REPLACE TABLE _objects AS (
     SELECT
         o,
-        ids.id
+        ids.external_id AS id
     FROM __objects AS o
-    LEFT JOIN _internal_ids_to_external_ids AS ids ON o.id = ids.stix_id
-    ORDER BY ids.id
+    LEFT JOIN stix_ids_to_external_ids AS ids ON o.id = ids.stix_id
+    ORDER BY ids.external_id
 );
 
 CREATE OR REPLACE TABLE _relationships AS (
@@ -43,9 +48,25 @@ CREATE OR REPLACE TABLE _relationships AS (
         o.source_ref,
         o.relationship_type,
         string_split(o.target_ref, '--')[1] AS target_type,
-        o.target_ref
+        o.target_ref,
+        o.description
     FROM __objects
     WHERE o."type" = 'relationship'
+);
+
+-- Relationships
+CREATE OR REPLACE TABLE relationships AS (
+    SELECT
+        source_ref AS source_stix_id,
+        (SELECT external_id FROM stix_ids_to_external_ids WHERE stix_id = source_ref) AS source_external_id,
+        source_type,
+        relationship_type,
+        target_type,
+        target_ref AS target_stix_id,
+        (SELECT external_id FROM stix_ids_to_external_ids WHERE stix_id = target_ref) AS target_external_id,
+        "description"
+    FROM _relationships
+    ORDER BY source_type, source_external_id, relationship_type, target_type, target_external_id
 );
 
 -- Tactics
@@ -262,8 +283,8 @@ CREATE OR REPLACE TABLE techniques_to_courses_of_action AS (
         c.id AS course_of_action_id,
         c.stix_id AS course_of_action_stix_id
     FROM _relationships r
-    JOIN techniques t ON r.source_ref = t.stix_id
-    JOIN courses_of_action c ON r.target_ref = c.stix_id
+    JOIN courses_of_action c ON r.source_ref = c.stix_id
+    JOIN techniques t ON r.target_ref = t.stix_id
     WHERE r.relationship_type = 'mitigates'
 );
 
@@ -396,6 +417,10 @@ CREATE OR REPLACE TABLE detection_strategies_to_techniques AS (
     JOIN techniques t ON r.target_ref = t.stix_id
     WHERE r.relationship_type = 'detects'
 );
+
+COPY stix_ids_to_external_ids TO '{{ data_dir }}/layers/silver/relational/mitre-attack/stix-ids-to-external-ids.parquet';
+
+COPY relationships TO '{{ data_dir }}/layers/silver/relational/mitre-attack/relationships.parquet';
 
 COPY tactics TO '{{ data_dir }}/layers/silver/relational/mitre-attack/tactics.parquet';
 COPY techniques TO '{{ data_dir }}/layers/silver/relational/mitre-attack/techniques.parquet';

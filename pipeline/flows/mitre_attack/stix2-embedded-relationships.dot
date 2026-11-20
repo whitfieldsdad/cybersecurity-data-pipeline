@@ -1,0 +1,14 @@
+digraph G {
+    rankdir=LR;
+    splines=polyline;
+    node [shape=box];
+    edge [color=blue];
+
+    tactic [label="x-mitre-tactic"];
+    attack_pattern [label="attack-pattern"];
+    detection_strategy [label="x-mitre-detection-strategy"];
+    analytic [label="x-mitre-analytic"];
+
+    attack_pattern -> tactic;
+    detection_strategy -> analytic;
+}

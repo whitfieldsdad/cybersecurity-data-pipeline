@@ -1,0 +1,25 @@
+digraph G {
+    rankdir=LR;
+    splines=polyline;
+    node [shape=box];
+    edge [color=green];
+
+    attack_pattern [label="attack-pattern"];
+    campaign;
+    course_of_action [label="course-of-action"];
+    intrusion_set [label="intrusion-set"];
+    malware;
+    tool;
+
+    // Descriptions are available
+    campaign -> intrusion_set [label="attributed-to"];
+    campaign -> attack_pattern [label="uses"];
+    campaign -> malware [label="uses"];
+    campaign -> tool [label="uses"];
+    course_of_action -> attack_pattern [label="mitigates"];
+    intrusion_set -> attack_pattern [label="uses"];
+    intrusion_set -> malware [label="uses"];
+    intrusion_set -> tool [label="uses"];
+    malware -> attack_pattern [label="uses"];
+    tool -> attack_pattern [label="uses"];
+}

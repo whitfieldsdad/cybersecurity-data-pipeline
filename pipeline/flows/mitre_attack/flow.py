@@ -4,6 +4,8 @@ from metaflow import step
 from pipeline.flows.base.flow import BaseFlow
 from pipeline import util
 
+import glob
+
 from pipeline.constants import DATA_DIR, SILVER_RELATIONAL_DIR, GOLD_ANALYST_DIR
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,7 +13,8 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 ETL_A = os.path.join(DIR, "flow-from-bronze-to-silver.sql.j2")
 ETL_B = os.path.join(DIR, "flow-from-silver-to-gold.sql.j2")
 
-WORKBOOK_CONFIG_FILE = os.path.join(DIR, "workbook.json.j2")
+WORKBOOKS_DIR = os.path.join(DIR, "workbooks")
+WORKBOOK_TEMPLATES = glob.glob(os.path.join(WORKBOOKS_DIR, '*.json.j2'))
 
 
 class Flow(BaseFlow):
@@ -31,12 +34,15 @@ class Flow(BaseFlow):
     
     @step
     def build_workbooks(self):
-        workbook_output_path = os.path.join(GOLD_ANALYST_DIR, 'mitre-attack', 'mitre-attack.xlsx')
-        util.build_workbook_from_template(
-            template_path=WORKBOOK_CONFIG_FILE, 
-            output_path=workbook_output_path, 
-            data_dir=DATA_DIR
-        )
+        output_dir = os.path.join(GOLD_ANALYST_DIR, 'mitre-attack')
+        for input_path in WORKBOOK_TEMPLATES:
+            output_path = os.path.join(output_dir, os.path.basename(input_path).replace('.json.j2', '.xlsx'))
+            util.build_workbook_from_template(
+                template_path=input_path,
+                output_path=output_path,
+                generate_config=False,
+                data_dir=DATA_DIR
+            )
 
         self.next(self.end)
 

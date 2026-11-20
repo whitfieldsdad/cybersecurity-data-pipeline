@@ -1,5 +1,6 @@
 import json
 import re
+import tempfile
 from hodgepodge import spreadsheet_builder
 
 import jinja2
@@ -36,7 +37,7 @@ def run_sql_template_file(template_path: str, **kwargs: dict):
     run_sql_file(sql_file_path)
 
 
-def build_workbook_from_template(template_path: str, output_path: str, **kwargs: dict):
+def build_workbook_from_template(template_path: str, output_path: str, generate_config: bool = False, **kwargs: dict):
     if not template_path.endswith('.j2'):
         raise ValueError("Workbook config filename must end with .j2")
 
@@ -50,11 +51,17 @@ def build_workbook_from_template(template_path: str, output_path: str, **kwargs:
         template = jinja2.Template(data)
         data = template.render(**kwargs)
 
-    print(f'Generating workbook config file: {config_path}')
-    with open(config_path, "w") as fp:
-        fp.write(data)
+    if generate_config:
+        print(f'Generating workbook config file: {config_path}')
+        with open(config_path, "w") as fp:
+            fp.write(data)
 
-    build_workbook(config_path, output_path)
+        build_workbook(config_path, output_path)
+    else:
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as tmp:
+            tmp.write(data.encode('utf-8'))
+            tmp.flush()
+            build_workbook(tmp.name, output_path)
 
 
 def build_workbook(config_path: str, output_path: str):

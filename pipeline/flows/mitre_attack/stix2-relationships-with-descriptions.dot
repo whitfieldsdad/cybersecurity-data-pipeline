@@ -1,0 +1,39 @@
+digraph G {
+    rankdir=LR;
+    splines=polyline;
+    node [shape=box];
+    edge [color=green];
+
+    attack_pattern [label="attack-pattern"];
+    campaign;
+    course_of_action [label="course-of-action"];
+    detection_strategy [label="x-mitre-detection-strategy"];
+    intrusion_set [label="intrusion-set"];
+    malware;
+    tool;
+
+    // Descriptions are available
+    campaign -> intrusion_set [label="attributed-to"];
+    campaign -> attack_pattern [label="uses"];
+    campaign -> malware [label="uses"];
+    campaign -> tool [label="uses"];
+    course_of_action -> attack_pattern [label="mitigates"];
+    intrusion_set -> attack_pattern [label="uses"];
+    intrusion_set -> malware [label="uses"];
+    intrusion_set -> tool [label="uses"];
+    malware -> attack_pattern [label="uses"];
+    tool -> attack_pattern [label="uses"];
+
+    // Descriptions are not available
+    edge [color=grey50];
+
+    attack_pattern -> attack_pattern [label="revoked-by"];
+    attack_pattern -> attack_pattern [label="subtechnique-of"];
+    campaign -> intrusion_set [label="attributed-to"];
+    intrusion_set -> intrusion_set [label="revoked-by"];
+    intrusion_set -> malware [label="uses"];
+    intrusion_set -> tool [label="uses"];
+    malware -> malware [label="revoked-by"];
+    malware -> tool [label="revoked-by"];
+    detection_strategy -> attack_pattern [label="detects"];
+}

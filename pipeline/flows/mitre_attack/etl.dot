@@ -1,0 +1,191 @@
+digraph G {
+    rankdir=LR;
+    splines=polyline;
+    node [shape=box];
+    edge [color=blue];
+    
+    subgraph cluster_bronze_git {
+        label="bronze/git";
+
+        bronze_git___objects [label="enterprise-attack.json"];
+    }
+
+    subgraph cluster_silver_relational {
+        label="silver/relational";
+
+        silver_relational_stix_ids_to_external_ids [label="stix_ids_to_external_ids"];
+        silver_relational__objects [label="_objects"];
+        silver_relational__relationships [label="_relationships"];
+
+        silver_relational_analytics [label="analytics"];
+        silver_relational_campaigns [label="campaigns"];
+        silver_relational_courses_of_action [label="courses_of_action"];
+        silver_relational_data_components [label="data_components"];
+        silver_relational_data_sources [label="data_sources"];
+        silver_relational_detection_strategies [label="detection_strategies"];
+        silver_relational_intrusion_sets [label="intrusion_sets"];
+        silver_relational_log_sources [label="log_sources"];
+        silver_relational_malware [label="malware"];
+        silver_relational_relationships [label="relationships"];
+        silver_relational_tactics [label="tactics"];
+        silver_relational_techniques [label="techniques"];
+        silver_relational_tools [label="tools"];
+
+        silver_relational_analytics_to_log_sources [label="analytics_to_log_sources"];
+        silver_relational_campaigns_to_intrusion_sets [label="campaigns_to_intrusion_sets"];
+        silver_relational_campaigns_to_malware [label="campaigns_to_malware"];
+        silver_relational_campaigns_to_techniques [label="campaigns_to_techniques"];
+        silver_relational_campaigns_to_tools [label="campaigns_to_tools"];
+        silver_relational_detection_strategies_to_analytics [label="detection_strategies_to_analytics"];
+        silver_relational_detection_strategies_to_techniques [label="detection_strategies_to_techniques"];
+        silver_relational_intrusion_sets_to_malware [label="intrusion_sets_to_malware"];
+        silver_relational_intrusion_sets_to_techniques [label="intrusion_sets_to_techniques"];
+        silver_relational_intrusion_sets_to_tools [label="intrusion_sets_to_tools"];
+        silver_relational_tactics_to_techniques [label="tactics_to_techniques"];
+        silver_relational_techniques_to_courses_of_action [label="techniques_to_courses_of_action"];
+        silver_relational_techniques_to_intrusion_sets [label="techniques_to_intrusion_sets"];
+        silver_relational_techniques_to_malware [label="techniques_to_malware"];
+        silver_relational_techniques_to_tools [label="techniques_to_tools"];
+
+        silver_relational_stix_ids_to_external_ids -> silver_relational__objects;
+
+        silver_relational__objects -> silver_relational__relationships;
+        silver_relational__relationships -> silver_relational_relationships;
+    
+        silver_relational__objects -> silver_relational_analytics;
+        silver_relational__objects -> silver_relational_campaigns;
+        silver_relational__objects -> silver_relational_courses_of_action;
+        silver_relational__objects -> silver_relational_data_components;
+        silver_relational__objects -> silver_relational_data_sources;
+        silver_relational__objects -> silver_relational_detection_strategies;
+        silver_relational__objects -> silver_relational_intrusion_sets;
+        silver_relational__objects -> silver_relational_log_sources;
+        silver_relational__objects -> silver_relational_malware;
+        silver_relational__objects -> silver_relational_tactics;
+        silver_relational__objects -> silver_relational_techniques;
+        silver_relational__objects -> silver_relational_tools;
+
+        silver_relational__objects -> silver_relational_analytics_to_log_sources;
+        silver_relational__objects -> silver_relational_campaigns_to_intrusion_sets;
+        silver_relational__objects -> silver_relational_campaigns_to_malware;
+        silver_relational__objects -> silver_relational_campaigns_to_techniques;
+        silver_relational__objects -> silver_relational_campaigns_to_tools;
+        silver_relational__objects -> silver_relational_detection_strategies_to_analytics;
+        silver_relational__objects -> silver_relational_detection_strategies_to_techniques;
+        silver_relational__objects -> silver_relational_intrusion_sets_to_malware;
+        silver_relational__objects -> silver_relational_intrusion_sets_to_techniques;
+        silver_relational__objects -> silver_relational_intrusion_sets_to_tools;
+        silver_relational__objects -> silver_relational_tactics_to_techniques;
+        silver_relational__objects -> silver_relational_techniques_to_courses_of_action;
+        silver_relational__objects -> silver_relational_techniques_to_intrusion_sets;
+        silver_relational__objects -> silver_relational_techniques_to_malware;
+        silver_relational__objects -> silver_relational_techniques_to_tools;
+    }
+
+    subgraph cluster_gold_analyst {
+        label="gold/analyst";
+
+        gold_analyst_tactics [label="tactics"];
+        gold_analyst_techniques [label="techniques"];
+        gold_analyst_intrusion_sets [label="intrusion sets"];
+        gold_analyst_campaigns [label="campaigns"];
+        gold_analyst_courses_of_action [label="courses of action"];
+        gold_analyst_malware [label="malware"];
+        gold_analyst_tools [label="tools"];
+        gold_analyst_detection_strategies [label="detection strategies"];
+        gold_analyst_analytics [label="analytics"];
+        gold_analyst_data_components [label="data components"];
+
+        gold_analyst_ttps [label="ttps"];
+
+        gold_analyst_campaigns_to_intrusion_sets [label="campaigns to intrusion sets"];
+        gold_analyst_campaigns_to_ttps [label="campaigns to ttps"];
+        gold_analyst_campaigns_to_tools [label="campaigns to tools"];
+        gold_analyst_campaigns_to_malware [label="campaigns to malware"];
+
+        gold_analyst_intrusion_sets_to_ttps [label="intrusion sets to ttps"];
+        gold_analyst_intrusion_sets_to_campaigns [label="intrusion sets to campaigns"];
+        gold_analyst_intrusion_sets_to_tools [label="intrusion sets to tools"];
+        gold_analyst_intrusion_sets_to_malware [label="intrusion sets to malware"];
+
+        gold_analyst_malware_to_ttps [label="malware to ttps"];
+
+        gold_analyst_tools_to_ttps [label="tools to ttps"];
+
+        gold_analyst_courses_of_action_to_ttps [label="courses of action to ttps"];
+
+        gold_analyst_ttps_to_detection_strategies_to_log_sources [label="ttps to detection strategies to log sources"];
+        gold_analyst_detection_strategies_to_log_sources [label="detection strategies to log sources"];
+        gold_analyst_data_components_to_ttps [label="data components to ttps"];
+    }
+
+    bronze_git___objects -> silver_relational__objects;
+    bronze_git___objects -> silver_relational_stix_ids_to_external_ids;
+
+    silver_relational_tactics -> gold_analyst_tactics;
+    silver_relational_techniques -> gold_analyst_techniques;
+    silver_relational_intrusion_sets -> gold_analyst_intrusion_sets;
+    silver_relational_campaigns -> gold_analyst_campaigns;
+    silver_relational_courses_of_action -> gold_analyst_courses_of_action;
+    silver_relational_malware -> gold_analyst_malware;
+    silver_relational_tools -> gold_analyst_tools;
+    silver_relational_detection_strategies -> gold_analyst_detection_strategies;
+    silver_relational_analytics -> gold_analyst_analytics;
+    silver_relational_data_components -> gold_analyst_data_components;
+
+    silver_relational_tactics_to_techniques -> gold_analyst_ttps;
+    silver_relational_tactics -> gold_analyst_ttps;
+    silver_relational_techniques -> gold_analyst_ttps;
+
+    silver_relational_campaigns_to_intrusion_sets -> gold_analyst_campaigns_to_intrusion_sets;
+    silver_relational_campaigns -> gold_analyst_campaigns_to_intrusion_sets;
+    silver_relational_intrusion_sets -> gold_analyst_campaigns_to_intrusion_sets;
+
+    silver_relational_campaigns_to_techniques -> gold_analyst_campaigns_to_ttps;
+    silver_relational_campaigns -> gold_analyst_campaigns_to_ttps;
+    gold_analyst_ttps -> gold_analyst_campaigns_to_ttps;
+
+    silver_relational_campaigns_to_malware -> gold_analyst_campaigns_to_malware;
+    silver_relational_campaigns -> gold_analyst_campaigns_to_malware;
+    silver_relational_malware -> gold_analyst_campaigns_to_malware;
+
+    silver_relational_campaigns_to_tools -> gold_analyst_campaigns_to_tools;
+    silver_relational_campaigns -> gold_analyst_campaigns_to_tools;
+    silver_relational_tools -> gold_analyst_campaigns_to_tools;
+
+    silver_relational_intrusion_sets_to_techniques -> gold_analyst_intrusion_sets_to_ttps;
+    silver_relational_ttps -> gold_analyst_intrusion_sets_to_ttps;
+    silver_relational_intrusion_sets -> gold_analyst_intrusion_sets_to_ttps;
+
+    gold_analyst_campaigns_to_intrusion_sets -> gold_analyst_intrusion_sets_to_campaigns;
+
+    silver_relational_intrusion_sets_to_malware -> gold_analyst_intrusion_sets_to_malware;
+    silver_relational_intrusion_sets -> gold_analyst_intrusion_sets_to_malware;
+    silver_relational_malware -> gold_analyst_intrusion_sets_to_malware;
+
+    silver_relational_intrusion_sets_to_tools -> gold_analyst_intrusion_sets_to_tools;
+    silver_relational_intrusion_sets -> gold_analyst_intrusion_sets_to_tools;
+    silver_relational_tools -> gold_analyst_intrusion_sets_to_tools;
+
+    silver_relational_techniques_to_malware -> gold_analyst_malware_to_ttps;
+
+    silver_relational_techniques_to_tools -> gold_analyst_tools_to_ttps;
+
+    silver_relational_techniques_to_courses_of_action -> gold_analyst_courses_of_action_to_ttps;
+    silver_relational_courses_of_action -> gold_analyst_courses_of_action_to_ttps;
+    gold_analyst_ttps -> gold_analyst_courses_of_action_to_ttps;
+
+    silver_relational_detection_strategies_to_analytics -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_detection_strategies_to_techniques -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_tactics_to_techniques -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_tactics -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_techniques -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_detection_strategies -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_analytics -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_analytics_to_log_sources -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_log_sources -> ttps_to_detection_strategies_to_log_sources;
+    silver_relational_data_components -> ttps_to_detection_strategies_to_log_sources;
+
+    gold_analyst_ttps_to_detection_strategies_to_log_sources -> gold_analyst_detection_strategies_to_log_sources;
+    gold_analyst_ttps_to_detection_strategies_to_log_sources -> gold_analyst_data_components_to_ttps;
+}

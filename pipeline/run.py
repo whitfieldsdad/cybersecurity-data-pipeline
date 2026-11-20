@@ -21,6 +21,7 @@ FLOWS = [
 def main(stage):
     stages = [stage] if stage else FLOWS
     for name in stages:
+        name = name.replace('-', '_')
         with Runner(f"pipeline/flows/{name}/flow.py").run() as running:
             print(f"{name}: {running.status}")
             if running.status != "successful":
